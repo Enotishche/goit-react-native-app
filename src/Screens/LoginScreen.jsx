@@ -55,7 +55,7 @@ export default function RegistrationScreen() {
   return (
     <ImageBackground source={require('../../assets/images/PhotoBG.jpg')} style={styles.backgroundImage}>
       <TouchableWithoutFeedback onPress={keyboardHide}>
-        <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" && "padding"}>
           <View style={styles.form}>
             <Text style={styles.title}>Log in</Text>
             <TextInput
