@@ -1,191 +1,113 @@
-import React from 'react';
-import { 
-  Keyboard, 
-  ImageBackground, 
-  KeyboardAvoidingView, 
-  StyleSheet, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  TouchableWithoutFeedback, 
-  View } from 'react-native';
+import React, { useState } from "react";
+import {
+  Text,
+  TextInput,
+  View,
+  TouchableOpacity,
+  ImageBackground,
+  Keyboard,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { authStyles } from "./AuthStyles";
+import { SubmitBtn } from "../Components/SubmitBtn";
+import Toast from "react-native-root-toast";
 
-export default function RegistrationScreen() {
-  const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [isKeyboardShow, setIsKeyboardShow] = React.useState(false);
+const { title, inputWrap, input, passwordWrap, showBtn, showBtnText, btn, btnText, link, linkText, image, logWrapper,} = authStyles;
 
-  const handleNameChange = (value) => {
-    setName(value);
-  };
+const initialFormState = {
+  email: "",
+  password: "",
+};
 
-  const handleEmailChange = (value) => {
-    setEmail(value);
-  };
+const initialFocusState = {
+  email: false,
+  password: false,
+};
 
-  const handlePasswordChange = (value) => {
-    setPassword(value);
-  };
-
-  const handleShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleSubmit = () => {
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Password:', password);
-  };
+export const LoginScreen = ({ navigation }) => {
+  const [isKeyboardShow, setIsKeyboardShow] = useState(false);
+  const [onFocus, setOnFocus] = useState(initialFocusState);
+  const [formState, setFormState] = useState(initialFormState);
+  const [isPasswordHidden, setIsPasswordHidden] = useState(true);
 
   const keyboardHide = () => {
     setIsKeyboardShow(false);
     Keyboard.dismiss();
   };
 
-  const handleFocus = () => {
-    setIsKeyboardShow(true);
+  const handleFocus = (inputName) => {
+    setIsKeyboardShow(true),
+      setOnFocus((prevState) => ({ ...prevState, [inputName]: true }));
   };
 
-  const handleBlur = () => {
+  const outFocus = (inputName) => {
+    setOnFocus((prevState) => ({ ...prevState, [inputName]: false }));
     setIsKeyboardShow(false);
   };
 
-  return (
-    <ImageBackground source={require('../../assets/images/PhotoBG.jpg')} style={styles.backgroundImage}>
-      <TouchableWithoutFeedback onPress={keyboardHide}>
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" && "padding"}>
-          <View style={styles.form}>
-            <Text style={styles.title}>Log in</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={handleEmailChange}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-            />
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Password"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={handlePasswordChange}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-              />
-              <TouchableOpacity
-                style={styles.showPasswordButton}
-                onPress={handleShowPassword}>
-                <Text style={styles.showPasswordButtonText}>
-                  {showPassword ? 'Show' : 'Hide'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {!isKeyboardShow && (
-              <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                <Text style={styles.buttonText}>Submit</Text>
-              </TouchableOpacity>
-            )}
-            <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Don't have an account?</Text>
-              <TouchableOpacity>
-                <Text style={styles.loginButton}>Register now!</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-    </ImageBackground>
-  );
-}
+  const handleSubmit = () => {
+    const { email, password } = formState;
+    if (!email || !password) {
+      Toast.show("Please, fill out the form complet");
+      return;
+    }
+    console.log('Email:', email);
+    console.log('Password:', password);
+    navigation.navigate("Home");
+    setFormState(initialFormState);
+  };
 
-const styles = StyleSheet.create({
-  container: {
-    position: "relative",
-    alignItems: "stretch",
-    paddingHorizontal: 16,
-    paddingTop: 32,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-  },
-  backgroundImage: {
-    flex: 1,
-    resizeMode: "cover",
-    justifyContent: "flex-end",
-  },
-  form: {
-    width: '100%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 16,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: 500,
-    textAlign: "center",
-    marginBottom: 32,
-  },
-  input: {
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: "#F6F6F6",
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    borderRadius: 8,
-    width: '100%',
-    marginBottom: 16,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 16,
-  },
-  passwordInput: {
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: "#F6F6F6",
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    borderRadius: 8,
-    width: '100%',
-    marginBottom: 16,
-  },
-  showPasswordButton: {
-    position: 'absolute',
-    right: 16,
-    bottom: 0,
-    height: '70%',
-  },
-  showPasswordButtonText: {
-    color: '#1B4371',
-  },
-  button: {
-    backgroundColor: '#FF6C00',
-    borderRadius: 100,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 43,
-    width: '100%',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  loginContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  loginText: {
-    marginRight: 10,
-  },
-  loginButton: {
-    color: '#2196F3',
-  },
-});
+  return (
+    <TouchableWithoutFeedback onPress={keyboardHide}>
+      <ImageBackground style={image} source={require("../../assets/images/photoBG.jpeg")}>
+        <KeyboardAvoidingView behavior={Platform.OS == "ios" && "padding"}>
+          <TouchableWithoutFeedback onPress={keyboardHide}>
+            <View onPress={keyboardHide} style={{ ...logWrapper,
+                                                  paddingBottom: isKeyboardShow ? 32 : 144,}}
+            >
+            <Text style={title}>Login</Text>
+            <View style={inputWrap}>
+                <TextInput style={{ ...input,
+                                    borderColor: onFocus.email ? "#FF6C00" : "#E8E8E8",}}
+                  placeholder="email:"
+                  placeholderTextColor="#BDBDBD"
+                  keyboardType="email-address"
+                  onFocus={() => handleFocus("email")}
+                  onEndEditing={() => outFocus("email")}
+                  onChangeText={ (value) =>setFormState( (prevState) => ( { ...prevState, email: value,} ) ) }
+                />
+            <View style={passwordWrap}>
+                  <TextInput
+                    style={{ ...input,
+                              borderColor: onFocus.password ? "#FF6C00" : "#E8E8E8", }}
+                    secureTextEntry={isPasswordHidden}
+                    placeholder="Password"
+                    placeholderTextColor="#BDBDBD"
+                    onFocus={() => handleFocus("password")}
+                    onEndEditing={() => outFocus("password")}
+                    onChangeText={(value) => setFormState( (prevState) => ( {...prevState, password: value, } ) )}
+                  />
+                  <TouchableOpacity style={showBtn} onPress={() => setIsPasswordHidden((prevState) => !prevState)}>
+                    <Text style={showBtnText}>
+                      {isPasswordHidden ? "Show" : "Hide"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              {!isKeyboardShow && (
+                <View style={{ marginTop: 43 }}>
+                  <SubmitBtn text="Log in" handleSubmit={handleSubmit} />
+                  <TouchableOpacity onPress={() => navigation.navigate("Registration")} style={link} activeOpacity={0.7} >
+                      <Text style={linkText}> Don't have an account? Register now! </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </ImageBackground>
+    </TouchableWithoutFeedback>
+  );
+};
