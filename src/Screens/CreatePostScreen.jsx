@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AntDesign, EvilIcons, FontAwesome } from "@expo/vector-icons";
+import { Camera } from "expo-camera";
+import * as MediaLibrary from "expo-media-library";
+import * as Location from "expo-location";
 import {
   Text,
   TextInput,
@@ -21,19 +24,40 @@ const { screenWrap, main, photoWrap, cameraBtn, photoText, createInput, createIn
 
 const initialFormState = {
   name: "",
-  location: "",
+  locationDesc: "",
 };
 
 const initialFocusState = {
   name: false,
-  location: false,
+  locationDesc: false,
 };
 
-export const CreatePostScreen = () => {
+export const CreatePostScreen = ({ navigation }) => {
   const [isKeyboardShow, setIsKeyboardShow] = useState(false);
   const [onFocus, setOnFocus] = useState(initialFocusState);
   const [formState, setFormState] = useState(initialFormState);
-  
+  const [camera, setCamera] = useState(null);
+  const [photo, setPhoto] = useState(null);
+  const [location, setLocation] = useState(null);
+
+  useEffect(() => { (async () => {
+            await Camera.requestCameraPermissionsAsync();
+            await MediaLibrary.requestPermissionsAsync();
+            await Location.requestForegroundPermissionsAsync();
+            }) (); }, [] );
+
+  useEffect(() => { async () => {}; }, [photo]);
+
+  const takePhoto = async () => {
+    const { uri } = await camera.takePictureAsync();
+    setPhoto(uri);
+    const location = await Location.getCurrentPositionAsync();
+    setLocation({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+  };
+
   const keyboardHide = () => {
     setIsKeyboardShow(false);
     Keyboard.dismiss();
@@ -49,88 +73,74 @@ export const CreatePostScreen = () => {
     setIsKeyboardShow(false);
   };
 
-  const handleSubmit = () => {
-    const { name, location } = formState;
-    if (!name || !location) {
+  const handleSubmit = async () => {
+    const { name, locationDesc } = formState;
+    const { latitude, longitude } = location;
+
+    if (!name || !locationDesc || !photo) {
       Toast.show("Please, fill out the form completely");
       return;
     }
+    console.log('photo:', photo);
+    console.log('name:', name);
+    console.log('location:', location);
+    console.log('locationDesc:', locationDesc);
+
+    navigation.navigate("Posts", { photo, name, locationDesc, latitude, longitude, });
     setFormState(initialFormState);
+    setPhoto(null);
   };
 
   return (
     <TouchableWithoutFeedback onPress={keyboardHide}>
       <KeyboardAvoidingView behavior={Platform.OS == "ios" && "padding"}>
-        <View style={screenWrap}>
+      <View style={screenWrap}>
           <Header title="Create POST" />
           <ScrollView>
             <View style={main}>
               <View>
-                <View style={photoWrap}>
-                  <Image />
-                  <TouchableOpacity style={cameraBtn}>
-                    <AntDesign name="camera" size={24} color="#BDBDBD" />
-                  </TouchableOpacity>
+                <View>
+                  {!photo 
+                  ? ( <Camera style={photoWrap} ref={setCamera}>
+                        <TouchableOpacity style={cameraBtn} onPress={() => { takePhoto(); }} >
+                          <AntDesign name="camera" size={24} color="#BDBDBD" />
+                        </TouchableOpacity>
+                      </Camera>)
+                  : (   <TouchableOpacity onPress={() => setPhoto(null)}>
+                        <Image source={{ uri: photo }} style={photoWrap} />
+                        </TouchableOpacity>)}
                 </View>
-                <Text style={photoText}>upload photo</Text>
+                  <Text style={photoText}> {!photo ? "Make photo" : "Edit photo"} </Text>
               </View>
               <View style={{ gap: 16 }}>
-                <TextInput
-                  style={{ ...createInput,
-                    borderBottomColor: onFocus.name ? "#FF6C00" : "#BDBDBD",
-                  }}
-                  placeholder="Name:"
-                  placeholderTextColor={"#BDBDBD"}
-                  onFocus={() => handleFocus("name")}
-                  onEndEditing={() => outFocus("name")}
-                  onChangeText={(value) =>
-                    setFormState((prevState) => ({
-                      ...prevState,
-                      name: value,
-                    }))
-                  }
+                <TextInput  style={{ ...createInput, borderBottomColor: onFocus.name ? "#FF6C00" : "#BDBDBD", }}
+                            placeholder="Name..."
+                            placeholderTextColor={"#BDBDBD"}
+                            onFocus={() => handleFocus("name")}
+                            onEndEditing={() => outFocus("name")}
+                            value={formState.name}
+                            onChangeText={ (value) => setFormState((prevState) => ({ ...prevState, name: value, })) }
                 />
                 <View style={createLocationWrap}>
-                  <TextInput
-                    style={{
-                      ...createInput,
-                      paddingLeft: 28,
-                      borderBottomColor: onFocus.location
-                        ? "#FF6C00"
-                        : "#BDBDBD",
-                    }}
-                    placeholder="Location:"
-                    placeholderTextColor={"#BDBDBD"}
-                    onFocus={() => handleFocus("location")}
-                    onEndEditing={() => outFocus("location")}
-                    onChangeText={(value) =>
-                      setFormState((prevState) => ({
-                        ...prevState,
-                        location: value,
-                      }))
-                    }
-                  />
-                  <EvilIcons
-                    style={createInputIcon}
-                    name="location"
-                    size={25}
-                    color="#BDBDBD"
-                  />
-                </View>
+                <TextInput  style={ { ...createInput, paddingLeft: 28, borderBottomColor: onFocus.location ? "#FF6C00" : "#BDBDBD", } }
+                            placeholder="Place..."
+                            placeholderTextColor={"#BDBDBD"}
+                            onFocus={() => handleFocus("locationDescription")}
+                            onEndEditing={() => outFocus("locationDescription")}
+                            value={formState.locationDesc}
+                            onChangeText={(value) => setFormState((prevState) => ({ ...prevState, locationDesc: value, } ) ) }
+                />
+                <EvilIcons style={createInputIcon} name="location" size={25} color="#BDBDBD" />
               </View>
-              {!isKeyboardShow && (
-                <>
-                  <SubmitBtn text="Submit" handleSubmit={handleSubmit} />
-                </>
-              )}
+              </View>
+              {!isKeyboardShow && <SubmitBtn text="POST" handleSubmit={handleSubmit} />}
             </View>
           </ScrollView>
           <View style={trashWrap}>
-            {!isKeyboardShow && (
-              <TouchableOpacity style={trashBtn}>
+            { !isKeyboardShow && (
+                <TouchableOpacity style={trashBtn} onPress={() => { setFormState(initialFormState); setPhoto(null);}}>
                 <FontAwesome name="trash-o" size={24} color="#BDBDBD" />
-              </TouchableOpacity>
-            )}
+                </TouchableOpacity>) }
           </View>
         </View>
       </KeyboardAvoidingView>

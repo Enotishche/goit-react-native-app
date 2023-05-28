@@ -125,4 +125,10 @@ export const mainStyles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#F6F6F6",
   },
+  photoDetailsEl: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
 });

@@ -19,6 +19,7 @@ export const Header = ({ title }) => {
   return (
     <View style={headerStyles.header}>
       <Text style={headerStyles.headerTitle}>{title}</Text>
+      
       {title === "POSTS" 
         ? (
             <TouchableOpacity style={headerStyles.logOutBtn} onPress={() => navigation.navigate("Login")}>
